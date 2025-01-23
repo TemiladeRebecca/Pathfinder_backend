@@ -3,6 +3,11 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  app.setGlobalPrefix('api/v1', { exclude: ['/', 'docs'] });
+
+  await app.listen(process.env.PORT ?? 7003);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.log('Error during boostrap: ', err);
+  process.exit(1);
+});

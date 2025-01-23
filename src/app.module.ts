@@ -1,17 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
-import { AuthController } from './auth/auth.controller';
-import { DatabaseModule } from './database/database.module';
 import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    ConfigModule.forRoot({ isGlobal: true }),
-    UserModule,
-  ], // Makes config available globally for env variables
-  controllers: [AuthController],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), UserModule, AuthModule],
+  controllers: [],
   providers: [],
 })
 export class AppModule {}
