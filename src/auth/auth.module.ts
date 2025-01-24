@@ -8,9 +8,7 @@ import { User, UserSchema } from 'src/user/user.model';
 import { AuthService } from './auth.service';
 import { UserSessionService } from 'src/user/user.session.service';
 import { UserSession, UserSessionSchema } from 'src/user/user-session.model';
-
-console.log(UserSessionSchema);
-console.log(UserSchema);
+import { JwtStrategy } from './utils/auth.strategy';
 
 @Module({
   imports: [
@@ -41,8 +39,8 @@ console.log(UserSchema);
       imports: [ConfigModule],
     }),
   ],
-  providers: [UserService, AuthService, UserSessionService],
-  exports: [],
+  providers: [UserService, AuthService, UserSessionService, JwtStrategy],
+  exports: [PassportModule],
   controllers: [AuthController],
 })
 export class AuthModule {}
