@@ -5,17 +5,26 @@ import { AuthController } from './auth.controller';
 import { UserService } from 'src/user/user.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/user/user.model';
+import { AuthService } from './auth.service';
+import { UserSessionService } from 'src/user/user.session.service';
+import { UserSession, UserSessionSchema } from 'src/user/user-session.model';
+
+console.log(UserSessionSchema);
+console.log(UserSchema);
 
 @Module({
   imports: [
     ConfigModule,
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: UserSession.name, schema: UserSessionSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
     JwtModule.registerAsync({
       global: true,
       useFactory: async (configService: ConfigService) => {
         const jwtSecret = configService.get<string>('JWT_SECRET');
         const jwtExpiry = {
-          expiresIn: configService.get<string>('JWT_EXPIRE'),
+          expiresIn: configService.get<string>('JWT_EXPIRATION'),
         };
         if (!jwtExpiry || !jwtSecret) {
           throw new Error(
@@ -32,7 +41,7 @@ import { User, UserSchema } from 'src/user/user.model';
       imports: [ConfigModule],
     }),
   ],
-  providers: [UserService],
+  providers: [UserService, AuthService, UserSessionService],
   exports: [],
   controllers: [AuthController],
 })
