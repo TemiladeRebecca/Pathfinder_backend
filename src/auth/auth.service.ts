@@ -9,7 +9,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private configService: ConfigService,
   ) {}
-  private secretKey = process.env.TOKEN_HASH_SECRET;
 
   async generateToken(
     payload: {
@@ -22,9 +21,12 @@ export class AuthService {
   ): Promise<string> {
     try {
       let token: string;
+      const exp = this.configService.get<string>('JWT_REFRESH_EXPIRATION');
+      const secret = this.configService.get<string>('JWT_SECRET');
       if (tokenType === 'refresh') {
         token = this.jwtService.sign(payload, {
-          expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION'),
+          expiresIn: String(exp),
+          secret,
         });
       }
       if (tokenType === 'access') {
@@ -39,7 +41,8 @@ export class AuthService {
 
   async hashToken(token: string): Promise<string> {
     try {
-      return createHmac('sha256', this.secretKey).update(token).digest('hex');
+      const secretKey = this.configService.get<string>('TOKEN_HASH_SECRET');
+      return createHmac('sha256', secretKey).update(token).digest('hex');
     } catch (error) {
       console.error('Error hashing token: ', error);
       throw error;

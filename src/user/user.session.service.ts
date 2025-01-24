@@ -13,9 +13,18 @@ export class UserSessionService {
   async createUserSession(
     criteria: Partial<UserSession>,
   ): Promise<UserSession | any> {
+    criteria.createdAt = new Date();
+    criteria.updatedAt = new Date();
     try {
-      criteria.createdAt = new Date();
-      criteria.updatedAt = new Date();
+      const userSessionExists = await this.findUser(criteria.userId);
+      if (userSessionExists) {
+        const result = await this.updateUserSession(
+          criteria.userId,
+          criteria.token,
+        );
+        console.log('result: ', result);
+        return result;
+      }
       const result = new this.userSessionModel(criteria);
       const newUser = await result.save();
       return newUser;
@@ -47,6 +56,16 @@ export class UserSessionService {
       return result;
     } catch (error) {
       console.error('Error updating UserSession: ', error);
+      throw error;
+    }
+  }
+
+  async deleteUserSession(userId: string): Promise<boolean> {
+    try {
+      const isDeleted = await this.userSessionModel.deleteOne({ userId });
+      return isDeleted.deletedCount === 1;
+    } catch (error) {
+      console.error('Error deleting UserSession: ', error);
       throw error;
     }
   }
