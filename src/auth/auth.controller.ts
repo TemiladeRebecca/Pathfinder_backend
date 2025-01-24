@@ -24,11 +24,11 @@ import {
 import { LoginUserDto, LoginUserResponse } from './dto/login.dto';
 import { User } from 'src/user/user.model';
 import { AuthService } from './auth.service';
-import { AuthGuard } from '@nestjs/passport';
 import { RefreshTokenDecorator } from './utils/auth.refresh-token.decorator';
 import { RefreshTokenResponse } from './dto/refresh-token-dto';
 import { UserSessionService } from 'src/user/user.session.service';
 import { Response } from 'express';
+import { JwtStrateggyGuard } from './utils/auth.strategy';
 
 @Controller('auth')
 @ApiTags('AUTH')
@@ -119,7 +119,7 @@ export class AuthController {
         clientIp,
         type: 'access',
       };
-      const accessToken = this.authService.generateToken(payload);
+      const accessToken = await this.authService.generateToken(payload);
       payload.type = 'refresh';
       const refreshToken = await this.authService.generateToken(
         payload,
@@ -145,11 +145,9 @@ export class AuthController {
             accessToken: {
               token: accessToken,
               expiresAt: Math.floor((Date.now() + 10 * 60 * 1000) / 1000),
+              expiresIn: '10m',
+              expiration: new Date(Date.now() + 10 * 60 * 1000),
               type: 'bearer',
-            },
-            refreshToken: {
-              token: refreshToken,
-              type: 'x-refresh-token',
             },
           },
         }),
@@ -229,9 +227,10 @@ export class AuthController {
     }
   }
 
-  @Get()
-  @UseGuards(AuthGuard('jwt'))
-  getProfile() {
+  @UseGuards(JwtStrateggyGuard)
+  @Get('protected')
+  getProfile(@Request() req: any) {
+    console.log(req.user);
     return { message: 'This is a protected route' };
   }
 }
