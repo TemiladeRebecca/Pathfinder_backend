@@ -3,14 +3,12 @@ import {
   Body,
   Controller,
   ForbiddenException,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
   Request,
   Res,
   UnauthorizedException,
-  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -28,7 +26,6 @@ import { RefreshTokenDecorator } from './utils/auth.refresh-token.decorator';
 import { RefreshTokenResponse } from './dto/refresh-token-dto';
 import { UserSessionService } from 'src/user/user.session.service';
 import { Response } from 'express';
-import { JwtStrateggyGuard } from './utils/auth.strategy';
 
 @Controller('auth')
 @ApiTags('AUTH')
@@ -182,11 +179,15 @@ export class AuthController {
     @Res() response: Response,
   ): Promise<Response> {
     try {
-      const payload = await this.authService.verifyToken(refreshToken, request);
-      const userSession = await this.userSessionService.findUser(
-        payload['userid'],
+      const payload: Record<string, any> = await this.authService.verifyToken(
+        refreshToken,
+        request,
       );
-      if (!userSession) {
+      const userSession = await this.userSessionService.findUserSession(
+        'userId',
+        payload['userId'],
+      );
+      if (userSession === undefined || userSession === null) {
         throw new BadRequestException('Invalid Session. Please Login again');
       }
       const isValidToken = await this.authService.verifyHashedToken(
@@ -196,12 +197,19 @@ export class AuthController {
       if (!isValidToken) {
         throw new ForbiddenException('Invalid refresh-Token');
       }
-      const accessToken = this.authService.generateToken(payload);
+      const accessToken = await this.authService.generateToken({
+        userId: payload.userId,
+        userAgent: payload.userAgent,
+        clientIp: payload.clientIp,
+        type: 'access',
+      });
       payload.type = 'refresh';
-      const newRefreshToken = await this.authService.generateToken(
-        payload,
-        'refresh',
-      );
+      const newRefreshToken = await this.authService.generateToken({
+        userId: payload.userId,
+        userAgent: payload.userAgent,
+        clientIp: payload.clientIp,
+        type: 'refresh',
+      });
       const hashedToken = await this.authService.hashToken(newRefreshToken);
       await this.userSessionService.updateUserSession(
         payload['userId'],
@@ -209,28 +217,19 @@ export class AuthController {
       );
       response.setHeader('X-Refresh-Token', newRefreshToken);
       return response.status(200).json(
-        JSON.stringify(
-          new RefreshTokenResponse({
-            statusCode: 200,
-            message: 'Tokens refreshed successfully',
-            data: {
-              accessToken,
-              expiresAt: Math.floor((Date.now() + 10 * 60 * 1000) / 1000),
-              type: 'bearer',
-            },
-          }),
-        ),
+        new RefreshTokenResponse({
+          statusCode: 200,
+          message: 'Tokens refreshed successfully',
+          data: {
+            accessToken,
+            expiresAt: Math.floor((Date.now() + 10 * 60 * 1000) / 1000),
+            type: 'bearer',
+          },
+        }),
       );
     } catch (error) {
       console.error('Error registering user: ', error);
       throw error;
     }
-  }
-
-  @UseGuards(JwtStrateggyGuard)
-  @Get('protected')
-  getProfile(@Request() req: any) {
-    console.log(req.user);
-    return { message: 'This is a protected route' };
   }
 }

@@ -36,6 +36,7 @@ import { JwtStrategy } from './utils/auth.strategy';
         return {
           secret: jwtSecret,
           signOptions: jwtExpiry,
+          secretOrPublicKey: jwtSecret,
         };
       },
       inject: [ConfigService],

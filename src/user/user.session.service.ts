@@ -16,14 +16,16 @@ export class UserSessionService {
     criteria.createdAt = new Date();
     criteria.updatedAt = new Date();
     try {
-      const userSessionExists = await this.findUser(criteria.userId);
+      const userSessionExists = await this.findUserSession(
+        'userId',
+        criteria.userId,
+      );
       if (userSessionExists) {
         const result = await this.updateUserSession(
           criteria.userId,
           criteria.token,
         );
-        console.log('result: ', result);
-        return result;
+        return await result;
       }
       const result = new this.userSessionModel(criteria);
       const newUser = await result.save();
@@ -34,9 +36,13 @@ export class UserSessionService {
       throw error;
     }
   }
-  async findUser(userId: string): Promise<UserSession | any> {
+  async findUserSession(
+    field: keyof UserSession,
+    value: any,
+  ): Promise<UserSession> {
     try {
-      const foundUser = this.userSessionModel.findOne({ userId }).exec();
+      const query = { [field]: value };
+      const foundUser = await this.userSessionModel.findOne(query).exec();
       return foundUser;
     } catch (error) {
       console.error('Error fetching UserSession: ', error);
