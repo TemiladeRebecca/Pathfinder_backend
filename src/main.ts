@@ -12,7 +12,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1', { exclude: ['/', 'docs'] });
 
   app.enable('trust proxy');
-  app.enableCors();
+  app.enableCors({
+    origin: ['*'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization, X-Refresh-Token',
+  });
 
   const logger = new Logger();
 
@@ -20,7 +24,14 @@ async function bootstrap() {
     .setTitle('Path Finder API')
     .setDescription('API DOcs for Path Finder')
     .setVersion('1.0.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      'access-token',
+    )
     .build();
 
   const docs = SwaggerModule.createDocument(app, options);
