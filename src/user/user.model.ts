@@ -6,10 +6,10 @@ export type UserDocument = User & Document;
 
 @Schema()
 export class User {
-  @Prop({ required: true, unique: true, length: 60 })
+  @Prop({ required: true, unique: true, maxlength: 60 })
   email: string;
 
-  @Prop({ required: true, length: 150 })
+  @Prop({ required: true, maxlength: 150 })
   password: string;
 
   @Prop({ required: true, default: Date.now })

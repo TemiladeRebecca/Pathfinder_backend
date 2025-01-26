@@ -26,7 +26,7 @@ export class UserService {
       throw error;
     }
   }
-  async findUser(criteria: FindUserT): Promise<User | null> {
+  async findUser(criteria: FindUserT): Promise<User | any> {
     try {
       const where = {
         ...(criteria.id && { id: criteria.id }),
