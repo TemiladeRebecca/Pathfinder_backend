@@ -32,6 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     payload: Record<string, string>,
   ): Promise<Record<string, string>> {
     try {
+      console.log('validate...');
       const userAgent = req.headers['user-agent'];
       const forwarded = req.ips;
       let clientIp: string | null;
